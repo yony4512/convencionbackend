@@ -27,14 +27,10 @@ const server = http.createServer(app);
 // --- Middleware Configuration (Order is Critical) ---
 
 // 1. CORS: Allow requests from frontend origins
-// 1. CORS: Allow requests from frontend origins
-// The allowed origins are loaded from an environment variable (CORS_ORIGINS)
-// In development, it defaults to localhost ports. For production, you'll set this variable in Hostinger.
 const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
@@ -46,7 +42,6 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use(cors(corsOptions));
-// Permitir que Express responda a todas las preflight requests OPTIONS
 app.options('*', cors(corsOptions));
 
 // 2. Parsers: Handle JSON, URL-encoded data, and cookies
@@ -56,8 +51,6 @@ app.use(cookieParser());
 
 // Endpoint para testimonios
 app.use('/api/testimonials', testimonialsRoutes);
-
-
 
 // 3. Passport Initialization (sin sesiones)
 app.use(passport.initialize());
@@ -104,13 +97,8 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
-// La autenticación de Socket.IO ahora se manejará con JWT en la conexión inicial.
-
 io.on('connection', (socket) => {
   console.log(`[Socket.IO] User connected: ${socket.id}`);
-  // Aquí se puede agregar la lógica para autenticar el socket con un token JWT
-  // que se envíe en el handshake o en un evento de 'authenticate'.
-
   socket.on('disconnect', () => {
     console.log(`[Socket.IO] User disconnected: ${socket.id}`);
   });

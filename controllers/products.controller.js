@@ -1,29 +1,13 @@
 const db = require('../db');
 
 // Helper para transformar la data de la DB a la del Frontend
-const transformProduct = (product, req) => {
-    // Asegurarnos de que la URL de la imagen sea siempre completa
-    const isFullUrl = product.image && product.image.startsWith('http');
-    // Si no es una URL completa, la construimos. Si está vacía, la dejamos así.
-    const imageUrl = product.image && !isFullUrl
-        ? `${req.protocol}://${req.get('host')}/uploads/${product.image}`
-        : product.image;
 
-    return {
-        ...product,
-        id: product.id.toString(),
-        price: parseFloat(product.price),
-        available: Boolean(product.available),
-        image: imageUrl // Devolvemos siempre la URL correcta
-    };
-};
 
 // Obtener todos los productos
 const getProducts = async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM products ORDER BY id DESC');
-        // Pasamos el objeto `req` para poder construir la URL de la imagen si es necesario
-        res.json({ ok: true, products: rows.map(p => transformProduct(p, req)) });
+        res.json({ ok: true, products: rows });
     } catch (error) {
         res.status(500).json({ ok: false, message: 'Error al obtener los productos.', error });
     }
@@ -38,7 +22,7 @@ const getProductById = async (req, res) => {
             return res.status(404).json({ ok: false, message: 'Producto no encontrado.' });
         }
         // Pasamos el objeto `req` también al obtener un solo producto
-        res.json({ ok: true, product: transformProduct(rows[0], req) });
+        res.json({ ok: true, product: rows[0] });
     } catch (error) {
         res.status(500).json({ ok: false, message: 'Error al obtener el producto.', error });
     }
@@ -54,7 +38,7 @@ const createProduct = async (req, res) => {
         }
 
         // Construir la URL completa de la imagen
-        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        const imageUrl = req.file.filename;
 
         const [result] = await db.query(
             'INSERT INTO products (name, description, price, category, available, image) VALUES (?, ?, ?, ?, ?, ?)',
@@ -90,7 +74,7 @@ const updateProduct = async (req, res) => {
 
         // Si se sube un nuevo archivo, se actualiza la URL de la imagen
         if (req.file) {
-            imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+            imageUrl = req.file.filename;
             // Opcional: aquí se podría añadir lógica para borrar la imagen antigua del servidor
         }
 
@@ -150,7 +134,7 @@ const getProductCategories = async (req, res) => {
 const getPublicProducts = async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM products WHERE available = true ORDER BY id DESC');
-        res.json({ ok: true, products: rows.map(p => transformProduct(p, req)) });
+        res.json({ ok: true, products: rows });
     } catch (error) {
         res.status(500).json({ ok: false, message: 'Error al obtener los productos públicos.', error });
     }

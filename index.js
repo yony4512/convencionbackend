@@ -95,7 +95,6 @@ app.get('/api', (req, res) => res.json({ message: '¡Bienvenido a la API de la P
 // --- Socket.IO Configuration ---
 const io = new Server(server, {
   cors: corsOptions,
-  path: '/api/socket.io/', // Alinea la ruta con la configuración de Nginx
 });
 
 io.on('connection', (socket) => {

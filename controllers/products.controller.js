@@ -7,7 +7,8 @@ const db = require('../db');
 const getProducts = async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM products ORDER BY id DESC');
-        res.json({ ok: true, products: rows });
+        const transformedRows = rows.map(p => ({ ...p, price: parseFloat(p.price), available: !!p.available }));
+        res.json({ ok: true, products: transformedRows });
     } catch (error) {
         res.status(500).json({ ok: false, message: 'Error al obtener los productos.', error });
     }
@@ -22,7 +23,9 @@ const getProductById = async (req, res) => {
             return res.status(404).json({ ok: false, message: 'Producto no encontrado.' });
         }
         // Pasamos el objeto `req` también al obtener un solo producto
-        res.json({ ok: true, product: rows[0] });
+        const product = rows[0];
+        const transformedProduct = { ...product, price: parseFloat(product.price), available: Boolean(product.available) };
+        res.json({ ok: true, product: transformedProduct });
     } catch (error) {
         res.status(500).json({ ok: false, message: 'Error al obtener el producto.', error });
     }
@@ -134,7 +137,8 @@ const getProductCategories = async (req, res) => {
 const getPublicProducts = async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM products WHERE available = true ORDER BY id DESC');
-        res.json({ ok: true, products: rows });
+        const transformedRows = rows.map(p => ({ ...p, price: parseFloat(p.price), available: !!p.available }));
+        res.json({ ok: true, products: transformedRows });
     } catch (error) {
         res.status(500).json({ ok: false, message: 'Error al obtener los productos públicos.', error });
     }

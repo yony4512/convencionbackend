@@ -53,27 +53,18 @@ router.post('/create-preference', authenticateJwt, async (req, res) => {
     await connection.query(itemQuery, [itemsValues]);
     console.log('[MP PREFERENCE] --> Order items inserted.');
 
-    const preferenceItems = cart.map(p => ({
-      id: p.id,
-      title: p.name,
-      quantity: Number(p.quantity),
-      unit_price: Number(p.price),
-      currency_id: 'PEN',
-    }));
-
-    if (deliveryFee && Number(deliveryFee) > 0) {
-      console.log(`[MP PREFERENCE] Adding delivery fee to preference: ${deliveryFee}`);
-      preferenceItems.push({
-        id: 'delivery',
-        title: 'Costo de Envío',
-        quantity: 1,
-        unit_price: Number(deliveryFee),
-        currency_id: 'PEN',
-      });
-    }
-
     const preferenceBody = {
-      items: preferenceItems,
+      items: cart.map(p => ({
+        id: p.id,
+        title: p.name,
+        quantity: Number(p.quantity),
+        unit_price: Number(p.price),
+        currency_id: 'PEN',
+      })),
+      shipments: {
+        cost: Number(deliveryFee) || 0,
+        mode: 'not_specified',
+      },
       payer: { name: req.user.name, email: req.user.email },
       payment_methods: {
         excluded_payment_types: [
